@@ -1,0 +1,123 @@
+#include <stdio.h> 
+#include <stdlib.h> 
+#define MAXSIZE 100000
+#define TRUE 1 
+#define FALSE 0 
+
+int ** matrix_generate(int row, int col){
+	int **matrix = malloc(row*sizeof(int*)); 
+	int i, j; 
+	float x; 
+	float prob = 0.6; 
+	for(i = 0; i < row; i++)
+		matrix[i] = malloc(sizeof(int*) * col); 
+	for(i = 0; i < row; i++)
+		for(j = 0; j < col; j++){
+			matrix[i][j] = rand()%30; 
+			x = (float) rand() / (float)(RAND_MAX); 
+			if(x < prob) 
+				matrix[i][j] = 0; 
+		}
+	return matrix; 
+}
+int *mulVectorGen(int size){
+	int *vector = malloc(size * sizeof(int)); 
+	int i; 
+	for(i = 0; i < size; i++)
+		vector[i] = rand()%20; 
+	return vector; 
+}
+int main(int argc, char *argv[]){
+	if(argc != 4){
+		printf("Usage: \n");
+		printf("$bash:./sparceMatrix_serial.c <row> <col> <debug>"); 
+		printf("Example:\n");                                           
+		printf("$bash:./sparceMatrix_serial.c 3 3 1"); 
+		printf("Perform sparce matrix multiplication on 3x3 random matrix with debug\n"); 
+		printf("$bash:./sparceMatrix_serial.c 3 3 0");
+		printf("Perform sparce matrix multiplication on 3x3 random matrix with no debug\n"); 
+		printf("Usage\n");
+		exit(EXIT_FAILURE);
+	}
+	int row = atoi(argv[1]); 
+	int col = atoi(argv[2]);
+	int debug = atoi(argv[3]); 
+	int **matrix = matrix_generate(row,col); 
+	int i,j;
+	if(debug == TRUE){
+		printf("===MATRIX===\n");
+		for (i = 0; i < row; i++){
+			for(j = 0; j < col; j++)
+				printf("%d\t",matrix[i][j]);
+			printf("\n");
+		}
+	}
+	int value[MAXSIZE];
+	int column[MAXSIZE]; 
+	int rowptr[MAXSIZE]; 
+	int v_ind = 0; 
+	int c_ind = 0; 
+	int r_ind = 0; 
+	int *multVector = mulVectorGen(col);
+	for(i = 0; i < row; i++){
+		int row_detect = TRUE; 
+		for(j = 0; j < col; j++) {
+			if(matrix[i][j] != 0) {
+				value[v_ind] = matrix[i][j]; 
+				column[c_ind] = j; 
+				if(row_detect == TRUE) {
+					rowptr[r_ind] = v_ind; 
+					row_detect = FALSE; 
+					r_ind++;
+				}
+				v_ind++;
+				c_ind++; 
+			}
+			if(j == col-1 && row_detect == TRUE){
+				rowptr[r_ind] = v_ind;
+				r_ind++;
+			}
+		}
+	}
+
+	int pieceWiseMul[v_ind]; 
+	for (i = 0; i < v_ind; i++){
+		pieceWiseMul[i] = value[i] * multVector[column[i]];
+	}
+
+	int inclusiveScan[v_ind]; 
+	for (i = 0; i < r_ind; i++) {
+		int start = rowptr[i];
+		int end; 
+		if(i < (r_ind - 1)) 
+			end = rowptr[i+1];
+		else 
+			end = v_ind;
+
+		int tmp = 0;
+		for(j = start; j < end; j++){
+			tmp = tmp + pieceWiseMul[j]; 
+			inclusiveScan[j] = tmp; 
+		}
+	}
+	if (debug == TRUE){
+		printf("VALUE:\t\t\t\t");
+		for(i = 0; i < v_ind; i++)	printf("%d%c", value[i], (i == v_ind - 1)?'\n': ' ');
+		
+		printf("COLUMN:\t\t\t\t"); 
+		for(i = 0; i < c_ind; i++)	printf("%d%c", column[i], (i == c_ind - 1)?'\n': ' ');
+	
+		printf("ROW PTR:\t\t\t"); 
+		for(i = 0; i < r_ind; i++)	printf("%d%c", rowptr[i], (i == r_ind - 1)?'\n': ' ');	
+
+		printf("VECTOR:\t\t\t\t"); 
+		for(i = 0; i < col; i++)	printf("%d%c", multVector[i], (i == col - 1)?'\n': ' ');	
+
+		printf("PIECEWISE MULTIPLICATION:\t");
+		for(i = 0; i < v_ind; i++)	printf("%d%c", pieceWiseMul[i], (i == v_ind - 1)?'\n': ' ');	
+		printf("INCLUSIVE SCAN:\t\t\t");
+		for(i = 0; i < v_ind; i++)
+			printf("%d%c", inclusiveScan[i], (i == v_ind - 1)?'\n': ' ');
+	}
+	return 0; 
+}
