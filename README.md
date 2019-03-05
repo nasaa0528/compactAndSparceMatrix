@@ -1,5 +1,5 @@
 # Compact and Sparce Matrix Multiplication
-authors: 
+authors: <br>
 Nasantogtokh Amarsaikhan - CWEVXJ<br>
 Mussa Ebrahim - NEPTUN <br>
 Nedal Eskaif -NEPTUN <br>
